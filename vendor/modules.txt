@@ -80,7 +80,7 @@ github.com/grpc-ecosystem/grpc-gateway/v2/utilities
 # github.com/kelseyhightower/envconfig v1.4.0
 ## explicit
 github.com/kelseyhightower/envconfig
-# github.com/networkservicemesh/api v1.5.0
+# github.com/networkservicemesh/api v1.6.1
 ## explicit; go 1.18
 github.com/networkservicemesh/api/pkg/api
 github.com/networkservicemesh/api/pkg/api/networkservice
@@ -88,7 +88,7 @@ github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/cls
 github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/common
 github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/kernel
 github.com/networkservicemesh/api/pkg/api/registry
-# github.com/networkservicemesh/sdk v1.5.0 => github.com/kubeslice/nsm-sdk v1.5.3-kbs
+# github.com/networkservicemesh/sdk v1.5.0 => github.com/kube-slice/nsm-sdk v1.6.2-kbs-vl3.0.20250926050737-a7ae382978a6
 ## explicit; go 1.18
 github.com/networkservicemesh/sdk/pkg/networkservice/chains/client
 github.com/networkservicemesh/sdk/pkg/networkservice/chains/endpoint
@@ -114,7 +114,6 @@ github.com/networkservicemesh/sdk/pkg/networkservice/common/setextracontext
 github.com/networkservicemesh/sdk/pkg/networkservice/common/timeout
 github.com/networkservicemesh/sdk/pkg/networkservice/common/trimpath
 github.com/networkservicemesh/sdk/pkg/networkservice/common/updatepath
-github.com/networkservicemesh/sdk/pkg/networkservice/common/updatetoken
 github.com/networkservicemesh/sdk/pkg/networkservice/core/adapters
 github.com/networkservicemesh/sdk/pkg/networkservice/core/chain
 github.com/networkservicemesh/sdk/pkg/networkservice/core/eventchannel
@@ -123,6 +122,7 @@ github.com/networkservicemesh/sdk/pkg/networkservice/core/trace
 github.com/networkservicemesh/sdk/pkg/networkservice/utils/metadata
 github.com/networkservicemesh/sdk/pkg/registry
 github.com/networkservicemesh/sdk/pkg/registry/chains/client
+github.com/networkservicemesh/sdk/pkg/registry/common/authorize
 github.com/networkservicemesh/sdk/pkg/registry/common/begin
 github.com/networkservicemesh/sdk/pkg/registry/common/clientconn
 github.com/networkservicemesh/sdk/pkg/registry/common/clientinfo
@@ -165,6 +165,7 @@ github.com/networkservicemesh/sdk/pkg/tools/opentelemetry
 github.com/networkservicemesh/sdk/pkg/tools/postpone
 github.com/networkservicemesh/sdk/pkg/tools/spiffejwt
 github.com/networkservicemesh/sdk/pkg/tools/spire
+github.com/networkservicemesh/sdk/pkg/tools/stringset
 github.com/networkservicemesh/sdk/pkg/tools/stringurl
 github.com/networkservicemesh/sdk/pkg/tools/token
 github.com/networkservicemesh/sdk/pkg/tools/tracing

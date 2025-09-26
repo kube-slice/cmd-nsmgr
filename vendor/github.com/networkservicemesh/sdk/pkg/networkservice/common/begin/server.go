@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Cisco and/or its affiliates.
+// Copyright (c) 2021-2022 Cisco and/or its affiliates.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -44,13 +44,6 @@ func (b *beginServer) Request(ctx context.Context, request *networkservice.Netwo
 	}
 	// If some other EventFactory is already in the ctx... we are already running in an executor, and can just execute normally
 	if fromContext(ctx) != nil {
-		eventFactoryServer, found := b.Load(request.GetConnection().GetId())
-		if found {
-			if eventFactoryServer.state == inDelete {
-				log.FromContext(ctx).Infof("event factory server in delete state, reject conn request")
-				return nil, errors.New("connection deletion in progress")
-			}
-		}
 		return next.Server(ctx).Request(ctx, request)
 	}
 	eventFactoryServer, _ := b.LoadOrStore(request.GetConnection().GetId(),
@@ -62,12 +55,13 @@ func (b *beginServer) Request(ctx context.Context, request *networkservice.Netwo
 		),
 	)
 	<-eventFactoryServer.executor.AsyncExec(func() {
-		currentEventFactoryServer, _ := b.LoadOrStore(request.GetConnection().GetId(), eventFactoryServer)
+		currentEventFactoryServer, _ := b.Load(request.GetConnection().GetId())
 		if currentEventFactoryServer != eventFactoryServer {
 			log.FromContext(ctx).Debug("recalling begin.Request because currentEventFactoryServer != eventFactoryServer")
 			conn, err = b.Request(ctx, request)
 			return
 		}
+
 		ctx = withEventFactory(ctx, eventFactoryServer)
 		conn, err = next.Server(ctx).Request(ctx, request)
 		if err != nil {
@@ -82,6 +76,7 @@ func (b *beginServer) Request(ctx context.Context, request *networkservice.Netwo
 		eventFactoryServer.state = established
 
 		eventFactoryServer.returnedConnection = conn.Clone()
+		eventFactoryServer.updateContext(ctx)
 	})
 	return conn, err
 }
@@ -93,14 +88,14 @@ func (b *beginServer) Close(ctx context.Context, conn *networkservice.Connection
 	}
 	eventFactoryServer, ok := b.Load(conn.GetId())
 	if !ok {
-		log.FromContext(ctx).Infof("BeginServerClose: allowing close to passthrough")
-		return next.Server(ctx).Close(ctx, conn)
+		// If we don't have a connection to Close, just let it be
+		return &emptypb.Empty{}, nil
 	}
 	<-eventFactoryServer.executor.AsyncExec(func() {
 		if eventFactoryServer.state != established || eventFactoryServer.request == nil {
 			return
 		}
-		currentServerClient, _ := b.LoadOrStore(conn.GetId(), eventFactoryServer)
+		currentServerClient, _ := b.Load(conn.GetId())
 		if currentServerClient != eventFactoryServer {
 			return
 		}

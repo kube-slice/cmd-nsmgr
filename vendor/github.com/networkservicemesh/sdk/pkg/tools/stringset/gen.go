@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 Cisco and/or its affiliates.
+// Copyright (c) 2022 Cisco and/or its affiliates.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -14,16 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package token provides a simple type for functions that generate tokens
-package token
+package stringset
 
 import (
-	"time"
-
-	"google.golang.org/grpc/credentials"
+	"sync"
 )
 
-// GeneratorFunc - a function which takes the credentials.AuthInfo of the peer of the client or server
-//
-//	and returns a token as a string (example: JWT), a expireTime, and an error.
-type GeneratorFunc func(peerAuthInfo credentials.AuthInfo) (token string, expireTime time.Time, err error)
+//go:generate go-syncmap -output sync_map.gen.go -type StringSet<string,struct{}>
+
+// StringSet - sync.Map with key == string and value == struct{}
+type StringSet sync.Map

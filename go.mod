@@ -7,7 +7,7 @@ require (
 	github.com/edwarnicke/grpcfd v1.1.2
 	github.com/edwarnicke/serialize v1.0.7
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/networkservicemesh/api v1.5.0
+	github.com/networkservicemesh/api v1.6.1
 	github.com/networkservicemesh/sdk v1.5.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spiffe/go-spiffe/v2 v2.0.0
@@ -15,7 +15,7 @@ require (
 	google.golang.org/grpc v1.59.0
 )
 
-replace github.com/networkservicemesh/sdk v1.5.0 => github.com/kubeslice/nsm-sdk v1.5.3-kbs
+replace github.com/networkservicemesh/sdk v1.5.0 => github.com/kube-slice/nsm-sdk v1.6.2-kbs-vl3.0.20250926050737-a7ae382978a6
 
 require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect

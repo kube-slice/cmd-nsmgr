@@ -1,6 +1,6 @@
-// Copyright (c) 2020 Cisco Systems, Inc.
-//
 // Copyright (c) 2020-2021 Doc.ai and/or its affiliates.
+//
+// Copyright (c) 2020-2022 Cisco Systems, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -35,8 +35,6 @@ import (
 	"github.com/networkservicemesh/api/pkg/api/networkservice"
 
 	"github.com/networkservicemesh/sdk/pkg/networkservice/core/next"
-
-	"github.com/networkservicemesh/sdk/pkg/tools/log"
 )
 
 type timeoutServer struct {
@@ -86,11 +84,8 @@ func (s *timeoutServer) Close(ctx context.Context, conn *networkservice.Connecti
 	_, err := next.Server(ctx).Close(ctx, conn)
 	if !(iserror.Is(err, context.DeadlineExceeded) || iserror.Is(err, context.Canceled)) {
 		if oldCancel, loaded := loadAndDelete(ctx, metadata.IsClient(s)); loaded {
-			log.FromContext(ctx).Infof("timeout_close: clearing ctx")
 			oldCancel()
 		}
-	} else {
-		log.FromContext(ctx).Infof("timeout_close: timer not cleared")
 	}
 	return &empty.Empty{}, err
 }
