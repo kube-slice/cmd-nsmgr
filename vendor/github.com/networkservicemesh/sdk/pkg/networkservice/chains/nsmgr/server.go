@@ -33,7 +33,6 @@ import (
 
 	"github.com/networkservicemesh/sdk/pkg/networkservice/chains/client"
 	"github.com/networkservicemesh/sdk/pkg/networkservice/chains/endpoint"
-	"github.com/networkservicemesh/sdk/pkg/networkservice/common/authorize"
 	"github.com/networkservicemesh/sdk/pkg/networkservice/common/clientinfo"
 	"github.com/networkservicemesh/sdk/pkg/networkservice/common/connect"
 	"github.com/networkservicemesh/sdk/pkg/networkservice/common/discoverforwarder"
@@ -43,7 +42,6 @@ import (
 	"github.com/networkservicemesh/sdk/pkg/networkservice/common/metrics"
 	"github.com/networkservicemesh/sdk/pkg/networkservice/core/adapters"
 	"github.com/networkservicemesh/sdk/pkg/registry"
-	registryauthorize "github.com/networkservicemesh/sdk/pkg/registry/common/authorize"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/begin"
 	"github.com/networkservicemesh/sdk/pkg/registry/common/clientconn"
 	registryclientinfo "github.com/networkservicemesh/sdk/pkg/registry/common/clientinfo"
@@ -59,7 +57,6 @@ import (
 	registryadapter "github.com/networkservicemesh/sdk/pkg/registry/core/adapters"
 	"github.com/networkservicemesh/sdk/pkg/registry/core/chain"
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
-	authmonitor "github.com/networkservicemesh/sdk/pkg/tools/monitorconnection/authorize"
 )
 
 // Nsmgr - A simple combination of the Endpoint, registry.NetworkServiceRegistryServer, and registry.NetworkServiceDiscoveryServer interfaces
@@ -77,8 +74,6 @@ type nsmgrServer struct {
 type serverOptions struct {
 	authorizeServer                  networkservice.NetworkServiceServer
 	authorizeMonitorConnectionServer networkservice.MonitorConnectionServer
-	authorizeNSRegistryServer        registryapi.NetworkServiceRegistryServer
-	authorizeNSERegistryServer       registryapi.NetworkServiceEndpointRegistryServer
 	dialOptions                      []grpc.DialOption
 	dialTimeout                      time.Duration
 	regURL                           *url.URL
@@ -132,26 +127,6 @@ func WithAuthorizeMonitorConnectionServer(authorizeMonitorConnectionServer netwo
 	}
 }
 
-// WithAuthorizeNSRegistryServer sets authorization NetworkServiceRegistry chain element
-func WithAuthorizeNSRegistryServer(authorizeNSRegistryServer registryapi.NetworkServiceRegistryServer) Option {
-	if authorizeNSRegistryServer == nil {
-		panic("authorizeNSRegistryServer cannot be nil")
-	}
-	return func(o *serverOptions) {
-		o.authorizeNSRegistryServer = authorizeNSRegistryServer
-	}
-}
-
-// WithAuthorizeNSERegistryServer sets authorization NetworkServiceEndpointRegistry chain element
-func WithAuthorizeNSERegistryServer(authorizeNSERegistryServer registryapi.NetworkServiceEndpointRegistryServer) Option {
-	if authorizeNSERegistryServer == nil {
-		panic("authorizeNSERegistryServer cannot be nil")
-	}
-	return func(o *serverOptions) {
-		o.authorizeNSERegistryServer = authorizeNSERegistryServer
-	}
-}
-
 // WithRegistry sets URL and dial options to reach the upstream registry, if not passed memory storage will be used.
 func WithRegistry(regURL *url.URL) Option {
 	return func(o *serverOptions) {
@@ -182,12 +157,8 @@ var _ Nsmgr = (*nsmgrServer)(nil)
 //				 options - a set of Nsmgr options.
 func NewServer(ctx context.Context, options ...Option) Nsmgr {
 	opts := &serverOptions{
-		authorizeServer:                  authorize.NewServer(authorize.Any()),
-		authorizeMonitorConnectionServer: authmonitor.NewMonitorConnectionServer(authmonitor.Any()),
-		authorizeNSRegistryServer:        registryauthorize.NewNetworkServiceRegistryServer(registryauthorize.Any()),
-		authorizeNSERegistryServer:       registryauthorize.NewNetworkServiceEndpointRegistryServer(registryauthorize.Any()),
-		name:                             "nsmgr-" + uuid.New().String(),
-		forwarderServiceName:             "forwarder",
+		name:                 "nsmgr-" + uuid.New().String(),
+		forwarderServiceName: "forwarder",
 	}
 	for _, opt := range options {
 		opt(opts)
@@ -211,7 +182,6 @@ func NewServer(ctx context.Context, options ...Option) Nsmgr {
 	}
 
 	nsRegistry = chain.NewNetworkServiceRegistryServer(
-		opts.authorizeNSRegistryServer,
 		nsRegistry,
 	)
 
@@ -239,7 +209,6 @@ func NewServer(ctx context.Context, options ...Option) Nsmgr {
 
 	var nseRegistry = chain.NewNetworkServiceEndpointRegistryServer(
 		begin.NewNetworkServiceEndpointRegistryServer(),
-		opts.authorizeNSERegistryServer,
 		registryclientinfo.NewNetworkServiceEndpointRegistryServer(),
 		expire.NewNetworkServiceEndpointRegistryServer(ctx, time.Minute),
 		registryrecvfd.NewNetworkServiceEndpointRegistryServer(), // Allow to receive a passed files
@@ -250,8 +219,6 @@ func NewServer(ctx context.Context, options ...Option) Nsmgr {
 	// Construct Endpoint
 	rv.Endpoint = endpoint.NewServer(ctx,
 		endpoint.WithName(opts.name),
-		endpoint.WithAuthorizeServer(opts.authorizeServer),
-		endpoint.WithAuthorizeMonitorConnectionServer(opts.authorizeMonitorConnectionServer),
 		endpoint.WithAdditionalFunctionality(
 			adapters.NewClientToServer(clientinfo.NewClient()),
 			discoverforwarder.NewServer(

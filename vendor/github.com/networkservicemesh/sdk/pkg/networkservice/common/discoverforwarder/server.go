@@ -110,11 +110,7 @@ func (d *discoverForwarderServer) Request(ctx context.Context, request *networks
 		// https://github.com/networkservicemesh/sdk/issues/790
 		for i, candidate := range nses {
 			u, err := url.Parse(candidate.Url)
-			if u != nil {
-				logger.Infof("**************************")
-				logger.Infof("nse url", u.String())
-				logger.Infof("**************************")
-			}
+
 			if err != nil {
 				logger.Errorf("can not parse forwarder=%v url=%v error=%v", candidate.Name, candidate.Url, err.Error())
 				continue
@@ -126,10 +122,8 @@ func (d *discoverForwarderServer) Request(ctx context.Context, request *networks
 				storeForwarderName(ctx, candidate.Name)
 				return resp, nil
 			}
-			logger.Infof("------------------------------------")
 			logger.Errorf("forwarder=%v url=%v returned error=%v", candidate.Name, candidate.Url, err.Error())
-			logger.Infof("------------------------------------")
-			candidatesErr = errors.Wrapf(candidatesErr, "%v. An error during select forwarder %v --> %v", i, candidate.Name, err.Error())
+			candidatesErr = errors.Wrapf(candidatesErr, "%v. An error during select forwawrder %v --> %v", i, candidate.Name, err.Error())
 		}
 
 		return nil, candidatesErr

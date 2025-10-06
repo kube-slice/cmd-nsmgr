@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 Cisco Systems, Inc.
+// Copyright (c) 2020 Cisco Systems, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -38,8 +38,7 @@ type NetworkServiceCandidates struct {
 }
 
 // WithCandidates -
-//
-//	Wraps 'parent' in a new Context that has the Candidates
+//    Wraps 'parent' in a new Context that has the Candidates
 func WithCandidates(parent context.Context, candidates []*registry.NetworkServiceEndpoint, service *registry.NetworkService) context.Context {
 	if parent == nil {
 		panic("cannot create context from nil parent")
@@ -51,8 +50,7 @@ func WithCandidates(parent context.Context, candidates []*registry.NetworkServic
 }
 
 // Candidates -
-//
-//	Returns the Candidates
+//   Returns the Candidates
 func Candidates(ctx context.Context) *NetworkServiceCandidates {
 	if rv, ok := ctx.Value(candidatesKey).(*NetworkServiceCandidates); ok {
 		return rv

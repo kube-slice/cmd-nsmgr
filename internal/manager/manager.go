@@ -38,7 +38,6 @@ import (
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
 	"github.com/networkservicemesh/sdk/pkg/tools/listenonurl"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
-	authmonitor "github.com/networkservicemesh/sdk/pkg/tools/monitorconnection/authorize"
 	"github.com/networkservicemesh/sdk/pkg/tools/tracing"
 
 	"github.com/networkservicemesh/cmd-nsmgr/internal/config"
@@ -84,8 +83,7 @@ func RunNsmgr(ctx context.Context, configuration *config.Config) error {
 	mgrOptions := []nsmgr.Option{
 		nsmgr.WithName(configuration.Name),
 		nsmgr.WithURL(u.String()),
-		nsmgr.WithAuthorizeMonitorConnectionServer(authmonitor.NewMonitorConnectionServer(authmonitor.Any())),
-		nsmgr.WithDialTimeout(configuration.DialTimeout),
+		nsmgr.WithDialTimeout(30 * time.Second),
 		nsmgr.WithForwarderServiceName(configuration.ForwarderNetworkServiceName),
 		nsmgr.WithDialOptions(
 			append(tracing.WithTracingDial(),

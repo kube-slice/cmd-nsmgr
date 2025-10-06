@@ -24,7 +24,6 @@ import (
 	"github.com/networkservicemesh/sdk/pkg/tools/monitorconnection/next"
 	"github.com/networkservicemesh/sdk/pkg/tools/opa"
 	"github.com/networkservicemesh/sdk/pkg/tools/spire"
-	"github.com/networkservicemesh/sdk/pkg/tools/stringset"
 )
 
 type authorizeMonitorConnectionsServer struct {
@@ -58,9 +57,8 @@ type MonitorOpaInput struct {
 func (a *authorizeMonitorConnectionsServer) MonitorConnections(in *networkservice.MonitorScopeSelector, srv networkservice.MonitorConnection_MonitorConnectionsServer) error {
 	ctx := srv.Context()
 	simpleMap := make(map[string][]string)
-
 	a.spiffeIDConnectionMap.Range(
-		func(sid spiffeid.ID, connIds *stringset.StringSet) bool {
+		func(sid spiffeid.ID, connIds *spire.ConnectionIDSet) bool {
 			connIds.Range(
 				func(connId string, _ struct{}) bool {
 					ids := simpleMap[sid.String()]
