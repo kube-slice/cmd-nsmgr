@@ -88,7 +88,7 @@ github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/cls
 github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/common
 github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/kernel
 github.com/networkservicemesh/api/pkg/api/registry
-# github.com/networkservicemesh/sdk v1.5.0 => github.com/kube-slice/nsm-sdk v1.5.3-kbs.0.20251001045438-be6bcde06bc9
+# github.com/networkservicemesh/sdk v1.5.0 => github.com/kube-slice/nsm-sdk v1.5.3-kbs.0.20251007073152-357c459c5f83
 ## explicit; go 1.18
 github.com/networkservicemesh/sdk/pkg/networkservice/chains/client
 github.com/networkservicemesh/sdk/pkg/networkservice/chains/endpoint
@@ -102,6 +102,7 @@ github.com/networkservicemesh/sdk/pkg/networkservice/common/connect
 github.com/networkservicemesh/sdk/pkg/networkservice/common/dial
 github.com/networkservicemesh/sdk/pkg/networkservice/common/discover
 github.com/networkservicemesh/sdk/pkg/networkservice/common/discoverforwarder
+github.com/networkservicemesh/sdk/pkg/networkservice/common/ensureexpires
 github.com/networkservicemesh/sdk/pkg/networkservice/common/excludedprefixes
 github.com/networkservicemesh/sdk/pkg/networkservice/common/mechanisms/recvfd
 github.com/networkservicemesh/sdk/pkg/networkservice/common/mechanisms/sendfd
