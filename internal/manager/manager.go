@@ -20,7 +20,7 @@ package manager
 
 import (
 	"context"
-	"crypto/tls"
+	"google.golang.org/grpc/credentials/insecure"
 	"net"
 	"net/url"
 	"os"
@@ -30,24 +30,14 @@ import (
 
 	"github.com/networkservicemesh/sdk/pkg/tools/log/logruslogger"
 	"github.com/networkservicemesh/sdk/pkg/tools/log/spanlogger"
-	"github.com/networkservicemesh/sdk/pkg/tools/spire"
 
 	"github.com/edwarnicke/grpcfd"
-	"github.com/sirupsen/logrus"
-	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
-	"github.com/spiffe/go-spiffe/v2/svid/x509svid"
-	"github.com/spiffe/go-spiffe/v2/workloadapi"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
 	"github.com/networkservicemesh/sdk/pkg/networkservice/chains/nsmgr"
-	"github.com/networkservicemesh/sdk/pkg/networkservice/common/authorize"
 	"github.com/networkservicemesh/sdk/pkg/tools/grpcutils"
 	"github.com/networkservicemesh/sdk/pkg/tools/listenonurl"
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
-	authmonitor "github.com/networkservicemesh/sdk/pkg/tools/monitorconnection/authorize"
-	"github.com/networkservicemesh/sdk/pkg/tools/spiffejwt"
-	"github.com/networkservicemesh/sdk/pkg/tools/token"
 	"github.com/networkservicemesh/sdk/pkg/tools/tracing"
 
 	"github.com/networkservicemesh/cmd-nsmgr/internal/config"
@@ -63,30 +53,12 @@ type manager struct {
 	configuration *config.Config
 	cancelFunc    context.CancelFunc
 	mgr           nsmgr.Nsmgr
-	source        *workloadapi.X509Source
-	svid          *x509svid.SVID
 	server        *grpc.Server
 }
 
 func (m *manager) Stop() {
 	m.cancelFunc()
 	m.server.Stop()
-	_ = m.source.Close()
-}
-
-func (m *manager) initSecurity() (err error) {
-	// Get a X509Source
-	logrus.Infof("Obtaining X509 Certificate Source")
-	m.source, err = workloadapi.NewX509Source(m.ctx)
-	if err != nil {
-		logrus.Fatalf("error getting x509 source: %+v", err)
-	}
-	m.svid, err = m.source.GetX509SVID()
-	if err != nil {
-		logrus.Fatalf("error getting x509 svid: %+v", err)
-	}
-	logrus.Infof("SVID: %q", m.svid.ID)
-	return
 }
 
 // RunNsmgr - start nsmgr.
@@ -107,36 +79,18 @@ func RunNsmgr(ctx context.Context, configuration *config.Config) error {
 	// Context to use for all things started in main
 	m.ctx, m.cancelFunc = context.WithCancel(ctx)
 
-	if err := m.initSecurity(); err != nil {
-		m.logger.Errorf("failed to create new spiffe TLS Peer %v", err)
-		return err
-	}
-
 	u := genPublishableURL(configuration.ListenOn, m.logger)
-
-	tlsClientConfig := tlsconfig.MTLSClientConfig(m.source, m.source, tlsconfig.AuthorizeAny())
-	tlsClientConfig.MinVersion = tls.VersionTLS12
-	tlsServerConfig := tlsconfig.MTLSServerConfig(m.source, m.source, tlsconfig.AuthorizeAny())
-	tlsServerConfig.MinVersion = tls.VersionTLS12
-	spiffeIDConnMap := spire.SpiffeIDConnectionMap{}
 	mgrOptions := []nsmgr.Option{
 		nsmgr.WithName(configuration.Name),
 		nsmgr.WithURL(u.String()),
-		nsmgr.WithAuthorizeServer(authorize.NewServer(authorize.WithSpiffeIDConnectionMap(&spiffeIDConnMap))),
-		nsmgr.WithAuthorizeMonitorConnectionServer(authmonitor.NewMonitorConnectionServer(authmonitor.WithSpiffeIDConnectionMap(&spiffeIDConnMap))),
-		nsmgr.WithDialTimeout(configuration.DialTimeout),
+		nsmgr.WithDialTimeout(30 * time.Second),
 		nsmgr.WithForwarderServiceName(configuration.ForwarderNetworkServiceName),
 		nsmgr.WithDialOptions(
 			append(tracing.WithTracingDial(),
 				grpc.WithTransportCredentials(
-					GrpcfdTransportCredentials(
-						credentials.NewTLS(tlsClientConfig),
-					),
+					grpcfd.TransportCredentials(insecure.NewCredentials()),
 				),
 				grpc.WithBlock(),
-				grpc.WithDefaultCallOptions(
-					grpc.PerRPCCredentials(token.NewPerRPCCredentials(spiffejwt.TokenGeneratorFunc(m.source, configuration.MaxTokenLifetime))),
-				),
 				grpcfd.WithChainStreamInterceptor(),
 				grpcfd.WithChainUnaryInterceptor(),
 			)...,
@@ -147,18 +101,14 @@ func RunNsmgr(ctx context.Context, configuration *config.Config) error {
 		mgrOptions = append(mgrOptions, nsmgr.WithRegistry(&configuration.RegistryURL))
 	}
 
-	m.mgr = nsmgr.NewServer(m.ctx, spiffejwt.TokenGeneratorFunc(m.source, m.configuration.MaxTokenLifetime), mgrOptions...)
+	m.mgr = nsmgr.NewServer(m.ctx, mgrOptions...)
 
 	// If we Listen on Unix socket for local connections we need to be sure folder are exist
 	createListenFolders(configuration)
 
 	serverOptions := append(
 		tracing.WithTracing(),
-		grpc.Creds(
-			GrpcfdTransportCredentials(
-				credentials.NewTLS(tlsServerConfig),
-			),
-		),
+		grpc.Creds(grpcfd.TransportCredentials(insecure.NewCredentials())),
 	)
 
 	m.server = grpc.NewServer(serverOptions...)
