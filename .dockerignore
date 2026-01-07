@@ -5,7 +5,6 @@ Dockerfile
 .golangci.yml
 .yamllint.yml
 *.md
-LICENSE
 staticcheck.conf
 .license
 .github
