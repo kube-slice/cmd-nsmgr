@@ -23,13 +23,13 @@ jobs:
     if: github.repository == 'networkservicemesh/cmd-template'
     steps:
       - name: Checkout ${{ github.repository }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
         with:
           path: ${{ github.repository }}
           repository: ${{ github.repository }}
           token: ${{ secrets.NSM_BOT_GITHUB_TOKEN }}
       - name: Find merged PR
-        uses: jwalton/gh-find-current-pr@v1
+        uses: jwalton/gh-find-current-pr@f3d61b485d2801773f7a07b2aaa3306bd8f8e653 # v1
         id: findPr
         with:
           github-token: ${{ github.token }}
@@ -45,12 +45,12 @@ jobs:
           echo "Commit Message:"
           cat /tmp/commit-message
       - name: Checkout networkservicemesh/${{ matrix.repository }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
         with:
           path: networkservicemesh/${{ matrix.repository }}
           repository: networkservicemesh/${{ matrix.repository }}
           token: ${{ secrets.NSM_BOT_GITHUB_TOKEN }}
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@0caeaed6fd66a828038c2da3c0f662a42862658f # v1
         with:
           go-version: 1.15
       - name: Push update to the ${{ matrix.repository }}
